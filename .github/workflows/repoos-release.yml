@@ -1,0 +1,60 @@
+name: Update RepoOS formula
+
+on:
+  repository_dispatch:
+    types: [repoos-release]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@f8d4222eb633e65c2a0157383cf80861fc7fae7f
+
+      - name: Update formula from npm
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          test -n "$VERSION"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          URL="https://registry.npmjs.org/@repo-os/repoos/-/repoos-${VERSION}.tgz"
+          SHA256="$(curl --fail --silent --show-error "$URL" | shasum -a 256 | awk '{print $1}')"
+          test -n "$SHA256"
+          VERSION="$VERSION" URL="$URL" SHA256="$SHA256" ruby <<'RUBY'
+          path = "Formula/repoos.rb"
+          text = File.read(path)
+          version = ENV.fetch("VERSION")
+          url = ENV.fetch("URL")
+          sha256 = ENV.fetch("SHA256")
+          updated = text
+            .sub(/url "[^"]+"/, "url \"#{url}\"")
+            .sub(/sha256 "[^"]+"/, "sha256 \"#{sha256}\"")
+          abort "Formula did not contain the expected url/sha256 fields" if updated == text
+          File.write(path, updated)
+          puts "Updated RepoOS formula to #{version} (#{sha256})"
+          RUBY
+
+      - name: Audit and test formula
+        run: |
+          brew audit --formula Formula/repoos.rb
+          brew install --build-from-source Formula/repoos.rb
+          brew test repoos
+
+      - name: Commit formula update
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/repoos.rb
+          if git diff --cached --quiet; then
+            echo "Formula is already current."
+          else
+            git commit -m "repoos ${VERSION}"
+            git push origin main
+          fi
