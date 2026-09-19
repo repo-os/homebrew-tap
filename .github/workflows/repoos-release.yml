@@ -43,7 +43,7 @@ jobs:
 
       - name: Audit and test formula
         run: |
-          brew audit --formula Formula/repoos.rb
+          brew audit --formula repoos
           brew install --build-from-source Formula/repoos.rb
           brew test repoos
 
