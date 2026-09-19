@@ -43,11 +43,12 @@ jobs:
 
       - name: Audit and test formula
         run: |
-          # Homebrew rejects auditing a formula by temporary checkout path
-          # before the updated file has been committed to the tap. The tap's
-          # push/test workflow performs the audit once it is in the tap.
-          brew install --build-from-source Formula/repoos.rb
-          brew test repoos
+          # setup-homebrew registers this checkout as repo-os/tap. Recent
+          # Homebrew versions reject direct Formula/*.rb paths, so use the
+          # qualified formula name to validate the updated checkout.
+          brew audit --formula repo-os/tap/repoos
+          brew install --build-from-source repo-os/tap/repoos
+          brew test repo-os/tap/repoos
 
       - name: Commit formula update
         env:
