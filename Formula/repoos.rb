@@ -1,8 +1,8 @@
 class Repoos < Formula
   desc "Repo-native task tracking for AI-assisted engineering"
   homepage "https://repoos.org"
-  url "https://registry.npmjs.org/@repo-os/repoos/-/repoos-0.5.85.tgz"
-  sha256 "b561009a329cebb31a0792f738bfb6533cb0182af8e3bd3c8b8046d6b40403ca"
+  url "https://registry.npmjs.org/@repo-os/repoos/-/repoos-0.5.86.tgz"
+  sha256 "a818e06875ec43bc5ebca12f021f3c879b282c5461ccd5f1685123aec48af7da"
   license "FSL-1.1-MIT"
 
   depends_on "node"
